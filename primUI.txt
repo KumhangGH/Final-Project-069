@@ -1,0 +1,87 @@
+from PySide2 import QtWidgets, QtCore, QtGui
+from maya import cmds
+from maya.OpenMayaUI import MQtUtil
+from shiboken2 import wrapInstance
+import random
+
+def maya_main_window():
+    main_window_ptr = MQtUtil.mainWindow()
+    return wrapInstance(int(main_window_ptr), QtWidgets.QMainWindow)
+
+class ClickCubeGame(QtWidgets.QDialog):
+    def __init__(self, parent=maya_main_window()):
+        super(ClickCubeGame, self).__init__(parent)
+        self.setWindowTitle("Click the Cube Mini Game")
+        self.setFixedSize(500, 550)
+
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #1C2B28; 
+                color: #CFFFE5;
+            }
+            QPushButton {
+                background-color: #2E5E56;
+                color: white;
+                border-radius: 8px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #3E7C71;
+            }
+            QLabel {
+                color: #CFFFE5;
+                font-size: 18px;
+            }
+        """)
+
+        self.timer = QtCore.QTimer()
+        self.time_left = 30
+        self.score = 0
+        self.current_cube = None
+
+        self.build_ui()
+        self.create_connections()
+
+    def build_ui(self):
+        self.image_lbl = QtWidgets.QLabel()
+        self.image_lbl.setAlignment(QtCore.Qt.AlignCenter)
+
+        image_path = "D:/work/FinalProjectCode 3/icon/icon.PNG"  # เปลี่ยน path ให้ถูกต้อง
+        image_width = 500
+        image_height = 500
+        pixmap = QtGui.QPixmap(image_path)
+        pixmap = pixmap.scaled(image_width, image_height, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+        self.image_lbl.setPixmap(pixmap)
+
+        self.start_btn = QtWidgets.QPushButton("Start")
+        self.start_btn.setFixedSize(200, 100)
+        self.start_btn.setStyleSheet("font-size: 30px; text-align: center;")
+
+        self.reset_btn = QtWidgets.QPushButton("Reset")
+        self.quit_btn = QtWidgets.QPushButton("Quit")
+        self.reset_btn.setFixedSize(120, 45)
+        self.quit_btn.setFixedSize(120, 45)
+
+        self.score_lbl = QtWidgets.QLabel("Score: 0")
+        self.timer_lbl = QtWidgets.QLabel("Time: 30s")
+        self.score_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        self.timer_lbl.setAlignment(QtCore.Qt.AlignCenter)
+
+        bottom_btn_layout = QtWidgets.QHBoxLayout()
+        bottom_btn_layout.addStretch()
+        bottom_btn_layout.addWidget(self.reset_btn)
+        bottom_btn_layout.addWidget(self.quit_btn)
+        bottom_btn_layout.addStretch()
+
+        main_layout = QtWidgets.QVBoxLayout()
+        main_layout.addWidget(self.image_lbl)         
+        main_layout.addSpacing(10)
+        main_layout.addWidget(self.timer_lbl)
+        main_layout.addWidget(self.score_lbl)
+        main_layout.addStretch()
+        main_layout.addWidget(self.start_btn, alignment=QtCore.Qt.AlignCenter)
+        main_layout.addStretch()
+        main_layout.addLayout(bottom_btn_layout)
+        main_layout.addSpacing(10)
+
+        self.setLayout(main_layout)
