@@ -1,0 +1,83 @@
+def create_connections(self):
+        self.start_btn.clicked.connect(self.start_game)
+        self.reset_btn.clicked.connect(self.reset_game)
+        self.quit_btn.clicked.connect(self.close)
+        self.timer.timeout.connect(self.update_timer)
+        cmds.scriptJob(killWithScene=True, event=["SelectionChanged", self.check_selection])
+
+    def start_game(self):
+        self.score = 0
+        self.time_left = 30
+        self.update_ui()
+        self.spawn_cube()
+        self.timer.start(1000)
+
+
+    def reset_game(self):
+        self.timer.stop()
+        self.time_left = 30
+        self.score = 0
+        self.update_ui()
+        if self.current_cube and cmds.objExists(self.current_cube):
+            cmds.delete(self.current_cube)
+        self.current_cube = None
+
+   
+    def update_timer(self):
+        self.time_left -= 1
+        self.update_ui()
+        if self.time_left <= 0:
+            self.timer.stop()
+            cmds.warning(f"Time's up! Final Score: {self.score}")
+            if self.current_cube and cmds.objExists(self.current_cube):
+                cmds.delete(self.current_cube)
+            self.current_cube = None
+
+    
+    def update_ui(self):
+        self.score_lbl.setText(f"Score: {self.score}")
+        self.timer_lbl.setText(f"Time: {self.time_left}s")
+
+    
+    def spawn_cube(self):
+        if self.current_cube and cmds.objExists(self.current_cube):
+            cmds.delete(self.current_cube)
+
+        x = random.uniform(-10, 10)
+        y = random.uniform(1, 10)
+        z = random.uniform(-10, 10)
+        self.current_cube = cmds.polyCube()[0]
+        cmds.move(x, y, z, self.current_cube)
+        cmds.select(clear=True)
+
+        
+        shader = cmds.shadingNode('lambert', asShader=True, name="cubeColorShader#")
+        sg = cmds.sets(renderable=True, noSurfaceShader=True, empty=True, name=shader + "SG")
+        cmds.connectAttr(shader + ".outColor", sg + ".surfaceShader", f=True)
+        color = [random.random(), random.random(), random.random()]
+        cmds.setAttr(shader + ".color", *color, type="double3")
+        cmds.sets(self.current_cube, e=True, forceElement=sg)
+
+    
+    def check_selection(self):
+        sel = cmds.ls(selection=True)
+        if self.current_cube and sel and sel[0] == self.current_cube:
+            self.score += 1
+            self.update_ui()
+            self.spawn_cube()
+        elif sel:
+            cmds.warning("Wrong object clicked!")
+
+
+def show_game_ui():
+    global game_ui
+    try:
+        game_ui.close()
+        game_ui.deleteLater()
+    except:
+        pass
+
+    game_ui = ClickCubeGame()
+    game_ui.show()
+
+show_game_ui()
